@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Catalog } from './components/Catalog'
 import { Finale } from './components/Finale'
 import { Nav } from './components/Nav'
@@ -18,6 +18,72 @@ import type { PlannerState } from './types'
 export default function App() {
   const [planner, setPlanner] = useState<PlannerState>(INITIAL_PLANNER)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const plannerRef = useRef(planner)
+
+  useEffect(() => {
+    plannerRef.current = planner
+  }, [planner])
+
+  useEffect(() => {
+    const modelContext = document.modelContext
+    if (!modelContext) return
+
+    const controller = new AbortController()
+
+    void Promise.all([
+      modelContext.registerTool(
+        {
+          name: 'get_tuesday_eleven_status',
+          description:
+            'Return whether Tuesday from 11:00 AM to 12:00 PM is currently blocked in the live planner state.',
+          inputSchema: { type: 'object', properties: {} },
+          annotations: { readOnlyHint: true },
+          execute: () => ({
+            tuesdayElevenBlocked: plannerRef.current.tuesdayElevenBlocked,
+          }),
+        },
+        { signal: controller.signal },
+      ),
+      modelContext.registerTool(
+        {
+          name: 'set_tuesday_eleven_blocked',
+          description:
+            'Set whether Tuesday from 11:00 AM to 12:00 PM is blocked in the planner.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              blocked: {
+                type: 'boolean',
+                description:
+                  'Whether Tuesday from 11:00 AM to 12:00 PM should be blocked.',
+              },
+            },
+            required: ['blocked'],
+          },
+          annotations: { readOnlyHint: false },
+          execute: (input) => {
+            const blocked = input?.blocked
+            if (typeof blocked !== 'boolean') {
+              throw new TypeError('blocked must be a boolean')
+            }
+
+            setPlanner((current) => ({
+              ...current,
+              tuesdayElevenBlocked: blocked,
+            }))
+            return { tuesdayElevenBlocked: blocked }
+          },
+        },
+        { signal: controller.signal },
+      ),
+    ]).catch((error: unknown) => {
+      if (!controller.signal.aborted) {
+        console.error('Failed to register WebMCP tools', error)
+      }
+    })
+
+    return () => controller.abort()
+  }, [])
 
   const selectedCourses = useMemo(
     () => getSelectedCourses(planner.selectedIds),
