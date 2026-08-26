@@ -6,11 +6,21 @@ import { Preferences } from './components/Preferences'
 import { Requirements } from './components/Requirements'
 import { Status } from './components/Status'
 import { Timetable } from './components/Timetable'
-import { CREDIT_MAX, CREDIT_MIN, INITIAL_PLANNER } from './data'
 import {
+  COURSES,
+  CREDIT_MAX,
+  CREDIT_MIN,
+  INITIAL_PLANNER,
+  REQUIREMENTS,
+} from './data'
+import {
+  courseConflictNotes,
   findConflicts,
+  formatCourseMeetings,
+  getCourse,
   getSelectedCourses,
   isPlanReady,
+  isRequirementMet,
   sumCredits,
 } from './planner'
 import type { PlannerState } from './types'
@@ -18,7 +28,12 @@ import type { PlannerState } from './types'
 export default function App() {
   const [planner, setPlanner] = useState<PlannerState>(INITIAL_PLANNER)
   const [reviewOpen, setReviewOpen] = useState(false)
+  const [confirmedPlanSignature, setConfirmedPlanSignature] = useState<
+    string | null
+  >(null)
   const plannerRef = useRef(planner)
+  const plannerSignature = JSON.stringify(planner)
+  const registrationConfirmed = confirmedPlanSignature === plannerSignature
 
   useEffect(() => {
     plannerRef.current = planner
@@ -33,45 +48,96 @@ export default function App() {
     void Promise.all([
       modelContext.registerTool(
         {
-          name: 'get_tuesday_eleven_status',
+          name: 'get_course_plan',
           description:
-            'Return whether Tuesday from 11:00 AM to 12:00 PM is currently blocked in the live planner state.',
+            'Read the current course plan, preferences, requirements, catalog, and deterministic planning notes.',
           inputSchema: { type: 'object', properties: {} },
           annotations: { readOnlyHint: true },
-          execute: () => ({
-            tuesdayElevenBlocked: plannerRef.current.tuesdayElevenBlocked,
-          }),
+          execute: () => {
+            const current = plannerRef.current
+            const selectedCourses = getSelectedCourses(current.selectedIds)
+
+            return {
+              preferences: {
+                maxCredits: current.maxCredits,
+                noEightAm: current.noEightAm,
+                fridayFree: current.fridayFree,
+                tuesdayElevenBlocked: current.tuesdayElevenBlocked,
+              },
+              creditTotal: sumCredits(selectedCourses),
+              ready: isPlanReady(current),
+              conflicts: findConflicts(current),
+              selectedCourseIds: current.selectedIds,
+              requirements: REQUIREMENTS.map((requirement) => ({
+                label: requirement.label,
+                met: isRequirementMet(requirement, current.selectedIds),
+              })),
+              catalog: COURSES.map((course) => ({
+                id: course.id,
+                code: course.code,
+                title: course.title,
+                credits: course.credits,
+                meetings: formatCourseMeetings(course),
+                selected: current.selectedIds.includes(course.id),
+                notes: courseConflictNotes(course, current),
+              })),
+            }
+          },
         },
         { signal: controller.signal },
       ),
       modelContext.registerTool(
         {
-          name: 'set_tuesday_eleven_blocked',
+          name: 'set_course_plan',
           description:
-            'Set whether Tuesday from 11:00 AM to 12:00 PM is blocked in the planner.',
+            'Replace the selected courses with an exact set of valid catalog course IDs and assess the resulting plan.',
           inputSchema: {
             type: 'object',
             properties: {
-              blocked: {
-                type: 'boolean',
+              courseIds: {
+                type: 'array',
+                items: { type: 'string' },
                 description:
-                  'Whether Tuesday from 11:00 AM to 12:00 PM should be blocked.',
+                  'Exact catalog course IDs that should make up the plan. Replaces the current selected course set.',
               },
             },
-            required: ['blocked'],
+            required: ['courseIds'],
           },
           annotations: { readOnlyHint: false },
           execute: (input) => {
-            const blocked = input?.blocked
-            if (typeof blocked !== 'boolean') {
-              throw new TypeError('blocked must be a boolean')
+            const courseIds = input?.courseIds
+            if (!Array.isArray(courseIds)) {
+              throw new TypeError('courseIds must be an array')
             }
+            if (!courseIds.every((id): id is string => typeof id === 'string')) {
+              throw new TypeError('Every courseIds item must be a string')
+            }
+
+            const selectedIds = [...new Set(courseIds)]
+            const unknownIds = selectedIds.filter((id) => !getCourse(id))
+            if (unknownIds.length > 0) {
+              throw new RangeError(
+                `Unknown course ID(s): ${unknownIds.join(', ')}. Plan left unchanged.`,
+              )
+            }
+
+            const nextPlanner = {
+              ...plannerRef.current,
+              selectedIds,
+            }
+            const selectedCourses = getSelectedCourses(selectedIds)
 
             setPlanner((current) => ({
               ...current,
-              tuesdayElevenBlocked: blocked,
+              selectedIds,
             }))
-            return { tuesdayElevenBlocked: blocked }
+
+            return {
+              selectedCourseIds: selectedIds,
+              creditTotal: sumCredits(selectedCourses),
+              ready: isPlanReady(nextPlanner),
+              conflicts: findConflicts(nextPlanner),
+            }
           },
         },
         { signal: controller.signal },
@@ -209,8 +275,10 @@ export default function App() {
           creditTotal={creditTotal}
           ready={ready}
           open={reviewOpen}
+          registrationConfirmed={registrationConfirmed}
           onOpen={() => setReviewOpen(true)}
           onClose={() => setReviewOpen(false)}
+          onConfirm={() => setConfirmedPlanSignature(plannerSignature)}
         />
       </main>
 

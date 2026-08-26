@@ -8,8 +8,10 @@ type FinaleProps = {
   creditTotal: number
   ready: boolean
   open: boolean
+  registrationConfirmed: boolean
   onOpen: () => void
   onClose: () => void
+  onConfirm: () => void
 }
 
 export function Finale({
@@ -18,8 +20,10 @@ export function Finale({
   creditTotal,
   ready,
   open,
+  registrationConfirmed,
   onOpen,
   onClose,
+  onConfirm,
 }: FinaleProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -132,9 +136,25 @@ export function Finale({
           submitted.
         </p>
 
+        <p role="status">
+          {registrationConfirmed
+            ? 'Registration confirmed for this fictional demonstration. Nothing was sent to a real university.'
+            : ''}
+        </p>
+
         <form method="dialog" className="review-actions">
-          <button type="submit" className="btn btn-solid">
+          <button type="submit" className="btn btn-ghost">
             Close
+          </button>
+          <button
+            type="button"
+            className="btn btn-solid"
+            disabled={!ready}
+            onClick={onConfirm}
+          >
+            {registrationConfirmed
+              ? 'Registration confirmed'
+              : 'Confirm registration'}
           </button>
         </form>
       </dialog>
