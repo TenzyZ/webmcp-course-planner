@@ -71,6 +71,7 @@ export default function App() {
               requirements: REQUIREMENTS.map((requirement) => ({
                 label: requirement.label,
                 met: isRequirementMet(requirement, current.selectedIds),
+                courseIds: requirement.fulfilledBy,
               })),
               catalog: COURSES.map((course) => ({
                 id: course.id,
@@ -250,6 +251,11 @@ export default function App() {
                   </span>
                   <span className="plan-credits-label">credits</span>
                 </p>
+                {conflicts.length > 0 ? (
+                  <p className="plan-conflict" role="status">
+                    {conflicts[0]}
+                  </p>
+                ) : null}
               </div>
               <p className="plan-count">
                 {selectedCourses.length}{' '}
