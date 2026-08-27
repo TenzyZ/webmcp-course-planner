@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { formatCourseMeetings } from '../planner'
+import { REQUIREMENTS } from '../data'
+import { formatCourseMeetings, isRequirementMet } from '../planner'
 import type { Course, PlannerState } from '../types'
 
 type FinaleProps = {
@@ -110,6 +111,19 @@ export function Finale({
           <div>
             <dt>Tuesday · 11:00 AM</dt>
             <dd>{planner.tuesdayElevenBlocked ? 'Blocked' : 'Available'}</dd>
+          </div>
+          <div>
+            <dt>Requirements</dt>
+            <dd>
+              {REQUIREMENTS.map(
+                (requirement) =>
+                  `${requirement.label} ${
+                    isRequirementMet(requirement, planner.selectedIds)
+                      ? 'in plan'
+                      : 'still open'
+                  }`,
+              ).join(' · ')}
+            </dd>
           </div>
         </dl>
 

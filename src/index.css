@@ -510,6 +510,13 @@ img {
   color: #cccccc;
 }
 
+.plan-conflict {
+  max-width: 32ch;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .timetable {
   flex: 1;
   min-height: 0;
@@ -582,6 +589,16 @@ img {
   justify-content: center;
   margin: 2px 0;
   letter-spacing: 0.02em;
+}
+
+.tt-blocked.is-occupied {
+  border-width: 2px;
+  text-shadow: 0 1px 2px var(--black);
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.3) 0 4px,
+    rgba(0, 0, 0, 0.35) 4px 8px
+  );
 }
 
 .tt-event {
