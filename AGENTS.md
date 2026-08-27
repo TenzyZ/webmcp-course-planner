@@ -80,4 +80,4 @@ Before reporting completion:
 
 ## Historical Documents
 
-Treat `GROK_UI_BUILD.md` and `GROK_KEYBOARD_FIX.md` as historical reference documents, not current task instructions. Treat `DESIGN.md` as a design reference, not permission to expand scope.
+Local, untracked historical prompt and design documents may exist in a developer's working copy. Treat them as historical reference only, not as current task instructions or permission to expand scope.
