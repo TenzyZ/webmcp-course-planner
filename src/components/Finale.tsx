@@ -61,8 +61,8 @@ export function Finale({
           ready for review.
         </h2>
         <p>
-          Confirm the plan as it stands. This is a demonstration — nothing is
-          sent to a registrar.
+          Confirm the plan as it stands. This is a demonstration. Nothing is sent
+          to a registrar.
         </p>
         <button
           ref={triggerRef}
