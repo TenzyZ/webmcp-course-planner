@@ -37,6 +37,19 @@ The demo starts with Tuesday from 11:00 AM–12:00 PM available.
 
 The conflict appears only after the human edit. The second tool read sees current state, not a stale snapshot.
 
+### Miu, the on-page WebMCP companion
+
+<img src="docs/design/miu/miu-sticker-reference.png" alt="Miu sticker sheet showing the planner companion's reading, working, conflict, ready, and celebration states alongside WebMCP tool labels." width="640">
+
+Miu is the planner's presentation layer, not a second agent. She holds no state
+and invokes no tools. Each pose is driven by a genuine event in the workflow
+above: `get_course_plan` running, `set_course_plan` updating the timetable, a
+human edit appearing in a later read, a deterministic conflict, or a plan that
+is ready. Her greeting and idle expressions are purely local and respect
+`prefers-reduced-motion`. The sheet is the broader design reference for her
+visual language; the shipped planner exposes only `get_course_plan` and
+`set_course_plan`.
+
 ## Shared-state architecture
 
 `App` in `src/App.tsx` owns the canonical state through `planner` and `setPlanner`:
