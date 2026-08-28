@@ -17,7 +17,7 @@ export function Catalog({ planner, onAdd, onRemove }: CatalogProps) {
           Available sections.
         </h2>
         <p className="section-lead">
-          A small set of fictional Biology-term offerings. Add or remove them
+          A small set of fictional Biology course offerings. Add or remove them
           from this plan.
         </p>
 

@@ -14,7 +14,7 @@ export function Requirements({ selectedIds }: RequirementsProps) {
           Remaining requirements.
         </h2>
         <p className="section-lead">
-          A short list for this term — not a full audit. Each one is either in
+          A short list for this term, not a full audit. Each one is either in
           the plan or still open.
         </p>
 

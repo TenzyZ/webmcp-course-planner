@@ -945,6 +945,310 @@ img {
   padding: 32px clamp(24px, 5vw, 80px) 48px;
 }
 
+.miu {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.miu-card {
+  width: max-content;
+  max-width: 260px;
+  padding: 12px 14px;
+  border: 1px solid rgba(34, 74, 151, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+}
+
+.miu-label {
+  color: #2857b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.miu-headline {
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.miu-label + .miu-headline {
+  margin-top: 5px;
+}
+
+.miu-message {
+  margin-top: 4px;
+  color: #2857b8;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.miu-detail {
+  margin-top: 4px;
+  color: var(--muted-48);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.miu-character {
+  position: relative;
+  flex: 0 0 132px;
+  width: 132px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  appearance: none;
+  transform-origin: 50% 100%;
+}
+
+.miu-character:disabled {
+  cursor: default;
+}
+
+.miu-character:focus-visible {
+  outline: 3px solid #2857b8;
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.miu-character-motion {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.miu-art {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.2));
+  transform-origin: 50% 100%;
+}
+
+.miu--reading .miu-art {
+  animation: miu-peer 560ms var(--ease) both;
+}
+
+.miu--reading[data-human-change='true'] .miu-art {
+  animation-name: miu-double-take;
+}
+
+.miu--working .miu-art,
+.miu--ready .miu-art {
+  animation: miu-pop 500ms var(--ease) both;
+}
+
+.miu--conflict .miu-art {
+  animation: miu-shake 460ms var(--ease) both;
+}
+
+.miu--celebrate .miu-art {
+  animation: miu-celebrate 560ms var(--ease) both;
+}
+
+.miu--local-click .miu-art {
+  animation: miu-acknowledge 260ms var(--ease) both;
+}
+
+.miu-glint {
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--white);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.miu--reading .miu-glint {
+  animation: miu-glint 520ms 80ms ease-out both;
+}
+
+.miu-confetti {
+  position: absolute;
+  inset: -8px;
+}
+
+.miu-confetti > span {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  width: 5px;
+  height: 12px;
+  border-radius: 2px;
+  background: #2857b8;
+  opacity: 0;
+}
+
+.miu-confetti > span:nth-child(2n) {
+  background: #f4b400;
+}
+
+.miu-confetti > span:nth-child(3n) {
+  background: #e85d75;
+}
+
+.miu--celebrate .miu-confetti > span {
+  animation: miu-confetti 700ms ease-out both;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(1) {
+  --miu-confetti-x: -58px;
+  --miu-confetti-y: -48px;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(2) {
+  --miu-confetti-x: -30px;
+  --miu-confetti-y: -72px;
+  animation-delay: 50ms;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(3) {
+  --miu-confetti-x: 5px;
+  --miu-confetti-y: -78px;
+  animation-delay: 90ms;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(4) {
+  --miu-confetti-x: 36px;
+  --miu-confetti-y: -68px;
+  animation-delay: 30ms;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(5) {
+  --miu-confetti-x: 60px;
+  --miu-confetti-y: -40px;
+  animation-delay: 80ms;
+}
+
+.miu--celebrate .miu-confetti > span:nth-child(6) {
+  --miu-confetti-x: 70px;
+  --miu-confetti-y: -5px;
+  animation-delay: 120ms;
+}
+
+@keyframes miu-peer {
+  0% {
+    transform: translateX(5px) rotate(1deg) scale(0.98);
+  }
+  55% {
+    transform: translateX(-3px) rotate(-2deg) scale(1.01);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes miu-double-take {
+  0%,
+  100% {
+    transform: none;
+  }
+  28% {
+    transform: translateX(-5px) rotate(-2deg);
+  }
+  55% {
+    transform: translateX(4px) rotate(2deg);
+  }
+  78% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+}
+
+@keyframes miu-pop {
+  0% {
+    transform: translateY(4px) scale(0.96);
+  }
+  55% {
+    transform: translateY(-3px) scale(1.025);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes miu-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(-4px) rotate(-1deg);
+  }
+  50% {
+    transform: translateX(4px) rotate(1deg);
+  }
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes miu-celebrate {
+  0% {
+    transform: translateY(8px) scale(0.96);
+  }
+  58% {
+    transform: translateY(-8px) scale(1.025);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes miu-acknowledge {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes miu-glint {
+  0% {
+    opacity: 0;
+    transform: translate(-5px, 5px) scale(0.6);
+  }
+  45% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8px, -8px) scale(1.15);
+  }
+}
+
+@keyframes miu-confetti {
+  0% {
+    opacity: 0;
+    transform: translate(0) rotate(0);
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--miu-confetti-x), var(--miu-confetti-y)) rotate(160deg);
+  }
+}
+
 @media (max-width: 1068px) {
   .hero {
     grid-template-columns: 1fr;
@@ -960,6 +1264,20 @@ img {
   .hero-plan {
     padding-top: 72px;
     min-height: 72svh;
+  }
+
+  .miu {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .miu-card {
+    max-width: 200px;
+  }
+
+  .miu-character {
+    flex-basis: 96px;
+    width: 96px;
   }
 }
 
@@ -1071,6 +1389,51 @@ img {
     font-size: 14px;
     color: var(--muted);
   }
+
+  .miu {
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .miu-card {
+    min-width: 0;
+    max-width: calc(100vw - 76px);
+    padding: 8px 12px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+  }
+
+  .miu-card p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .miu-label {
+    font-size: 9px;
+  }
+
+  .miu-headline,
+  .miu-message {
+    font-size: 12px;
+  }
+
+  .miu-detail {
+    font-size: 10px;
+  }
+
+  .miu-character {
+    flex-basis: 44px;
+    width: 44px;
+  }
+
+  .miu-glint,
+  .miu-confetti {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1087,6 +1450,15 @@ img {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .miu-card {
+    max-width: calc(100vw - 66px);
+  }
+
+  .miu-character {
+    flex-basis: 36px;
+    width: 36px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1101,5 +1473,18 @@ img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .miu-character,
+  .miu-art,
+  .miu-glint,
+  .miu-confetti > span {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .miu-glint,
+  .miu-confetti {
+    display: none !important;
   }
 }

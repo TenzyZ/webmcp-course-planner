@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Catalog } from './components/Catalog'
 import { Finale } from './components/Finale'
+import { Miu } from './components/Miu'
 import { Nav } from './components/Nav'
 import { Preferences } from './components/Preferences'
 import { Requirements } from './components/Requirements'
@@ -23,6 +24,7 @@ import {
   isRequirementMet,
   sumCredits,
 } from './planner'
+import { useMiuStatus } from './miuStatus'
 import type { PlannerState } from './types'
 
 export default function App() {
@@ -32,6 +34,14 @@ export default function App() {
     string | null
   >(null)
   const plannerRef = useRef(planner)
+  const humanEditRef = useRef(false)
+  const {
+    status: miuStatus,
+    onRead,
+    onWrite,
+    onRejected,
+    onCelebrate,
+  } = useMiuStatus()
   const plannerSignature = JSON.stringify(planner)
   const registrationConfirmed = confirmedPlanSignature === plannerSignature
 
@@ -56,8 +66,9 @@ export default function App() {
           execute: () => {
             const current = plannerRef.current
             const selectedCourses = getSelectedCourses(current.selectedIds)
+            const conflicts = findConflicts(current)
 
-            return {
+            const result = {
               preferences: {
                 maxCredits: current.maxCredits,
                 noEightAm: current.noEightAm,
@@ -66,7 +77,7 @@ export default function App() {
               },
               creditTotal: sumCredits(selectedCourses),
               ready: isPlanReady(current),
-              conflicts: findConflicts(current),
+              conflicts,
               selectedCourseIds: current.selectedIds,
               requirements: REQUIREMENTS.map((requirement) => ({
                 label: requirement.label,
@@ -83,6 +94,11 @@ export default function App() {
                 notes: courseConflictNotes(course, current),
               })),
             }
+
+            const humanChange = humanEditRef.current
+            onRead(humanChange, conflicts[0])
+            humanEditRef.current = false
+            return result
           },
         },
         { signal: controller.signal },
@@ -106,38 +122,45 @@ export default function App() {
           },
           annotations: { readOnlyHint: false },
           execute: (input) => {
-            const courseIds = input?.courseIds
-            if (!Array.isArray(courseIds)) {
-              throw new TypeError('courseIds must be an array')
-            }
-            if (!courseIds.every((id): id is string => typeof id === 'string')) {
-              throw new TypeError('Every courseIds item must be a string')
-            }
+            try {
+              const courseIds = input?.courseIds
+              if (!Array.isArray(courseIds)) {
+                throw new TypeError('courseIds must be an array')
+              }
+              if (!courseIds.every((id): id is string => typeof id === 'string')) {
+                throw new TypeError('Every courseIds item must be a string')
+              }
 
-            const selectedIds = [...new Set(courseIds)]
-            const unknownIds = selectedIds.filter((id) => !getCourse(id))
-            if (unknownIds.length > 0) {
-              throw new RangeError(
-                `Unknown course ID(s): ${unknownIds.join(', ')}. Plan left unchanged.`,
-              )
-            }
+              const selectedIds = [...new Set(courseIds)]
+              const unknownIds = selectedIds.filter((id) => !getCourse(id))
+              if (unknownIds.length > 0) {
+                throw new RangeError(
+                  `Unknown course ID(s): ${unknownIds.join(', ')}. Plan left unchanged.`,
+                )
+              }
 
-            const nextPlanner = {
-              ...plannerRef.current,
-              selectedIds,
-            }
-            const selectedCourses = getSelectedCourses(selectedIds)
+              const nextPlanner = {
+                ...plannerRef.current,
+                selectedIds,
+              }
+              const selectedCourses = getSelectedCourses(selectedIds)
+              const conflicts = findConflicts(nextPlanner)
 
-            setPlanner((current) => ({
-              ...current,
-              selectedIds,
-            }))
+              setPlanner((current) => ({
+                ...current,
+                selectedIds,
+              }))
+              onWrite(conflicts[0])
 
-            return {
-              selectedCourseIds: selectedIds,
-              creditTotal: sumCredits(selectedCourses),
-              ready: isPlanReady(nextPlanner),
-              conflicts: findConflicts(nextPlanner),
+              return {
+                selectedCourseIds: selectedIds,
+                creditTotal: sumCredits(selectedCourses),
+                ready: isPlanReady(nextPlanner),
+                conflicts,
+              }
+            } catch (error: unknown) {
+              onRejected(error instanceof Error ? error.message : String(error))
+              throw error
             }
           },
         },
@@ -150,7 +173,7 @@ export default function App() {
     })
 
     return () => controller.abort()
-  }, [])
+  }, [onRead, onRejected, onWrite])
 
   const selectedCourses = useMemo(
     () => getSelectedCourses(planner.selectedIds),
@@ -161,10 +184,12 @@ export default function App() {
   const ready = isPlanReady(planner)
 
   function update(partial: Partial<PlannerState>) {
+    humanEditRef.current = true
     setPlanner((current) => ({ ...current, ...partial }))
   }
 
   function addCourse(id: string) {
+    humanEditRef.current = true
     setPlanner((current) =>
       current.selectedIds.includes(id)
         ? current
@@ -173,6 +198,7 @@ export default function App() {
   }
 
   function removeCourse(id: string) {
+    humanEditRef.current = true
     setPlanner((current) => ({
       ...current,
       selectedIds: current.selectedIds.filter((selectedId) => selectedId !== id),
@@ -210,8 +236,8 @@ export default function App() {
             </h1>
             <p className="hero-lead">
               Balance biology requirements with the hours you keep. This plan is
-              local, visible, and yours to change — the same schedule a student
-              and an agent will later share.
+              local, visible, and yours to change. A student and an agent will
+              later share the same schedule.
             </p>
 
             <dl className="hero-context">
@@ -235,7 +261,9 @@ export default function App() {
               onToggleNoEightAm={() => update({ noEightAm: !planner.noEightAm })}
               onToggleFridayFree={() => update({ fridayFree: !planner.fridayFree })}
               onTuesdayEleven={(blocked) =>
-                update({ tuesdayElevenBlocked: blocked })
+                blocked === planner.tuesdayElevenBlocked
+                  ? undefined
+                  : update({ tuesdayElevenBlocked: blocked })
               }
             />
           </div>
@@ -284,9 +312,14 @@ export default function App() {
           registrationConfirmed={registrationConfirmed}
           onOpen={() => setReviewOpen(true)}
           onClose={() => setReviewOpen(false)}
-          onConfirm={() => setConfirmedPlanSignature(plannerSignature)}
+          onConfirm={() => {
+            setConfirmedPlanSignature(plannerSignature)
+            onCelebrate()
+          }}
         />
       </main>
+
+      <Miu status={miuStatus} />
 
       <footer className="site-foot">
         <p>Fictional demonstration. No registration is submitted.</p>
