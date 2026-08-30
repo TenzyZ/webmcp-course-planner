@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Catalog } from './components/Catalog'
 import { Finale } from './components/Finale'
 import { Miu } from './components/Miu'
-import { Nav } from './components/Nav'
+import { Nav, type WebMcpStatus } from './components/Nav'
 import { Preferences } from './components/Preferences'
 import { Requirements } from './components/Requirements'
 import { Status } from './components/Status'
@@ -29,6 +29,9 @@ import type { PlannerState } from './types'
 
 export default function App() {
   const [planner, setPlanner] = useState<PlannerState>(INITIAL_PLANNER)
+  const [webMcpStatus, setWebMcpStatus] = useState<WebMcpStatus>(() =>
+    document.modelContext ? 'connecting' : 'unavailable',
+  )
   const [reviewOpen, setReviewOpen] = useState(false)
   const [confirmedPlanSignature, setConfirmedPlanSignature] = useState<
     string | null
@@ -37,6 +40,7 @@ export default function App() {
   const humanEditRef = useRef(false)
   const {
     status: miuStatus,
+    lastActivity,
     onRead,
     onWrite,
     onRejected,
@@ -166,11 +170,16 @@ export default function App() {
         },
         { signal: controller.signal },
       ),
-    ]).catch((error: unknown) => {
-      if (!controller.signal.aborted) {
-        console.error('Failed to register WebMCP tools', error)
-      }
-    })
+    ])
+      .then(() => {
+        if (!controller.signal.aborted) setWebMcpStatus('ready')
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          setWebMcpStatus('error')
+          console.error('Failed to register WebMCP tools', error)
+        }
+      })
 
     return () => controller.abort()
   }, [onRead, onRejected, onWrite])
@@ -182,6 +191,9 @@ export default function App() {
   const creditTotal = sumCredits(selectedCourses)
   const conflicts = findConflicts(planner)
   const ready = isPlanReady(planner)
+  const openRequirementLabels = REQUIREMENTS.filter(
+    (requirement) => !isRequirementMet(requirement, planner.selectedIds),
+  ).map((requirement) => requirement.label)
 
   function update(partial: Partial<PlannerState>) {
     humanEditRef.current = true
@@ -224,7 +236,7 @@ export default function App() {
       >
         Skip to content
       </a>
-      <Nav />
+      <Nav webMcpStatus={webMcpStatus} />
 
       <main id="main" tabIndex={-1}>
         <section className="hero" aria-labelledby="hero-heading">
@@ -236,8 +248,9 @@ export default function App() {
             </h1>
             <p className="hero-lead">
               Balance biology requirements with the hours you keep. This plan is
-              local, visible, and yours to change. A student and an agent will
-              later share the same schedule.
+              local, visible, and yours to change. A student and an AI agent share
+              the same live course plan through WebMCP, while final registration
+              stays human-controlled.
             </p>
 
             <dl className="hero-context">
@@ -302,6 +315,8 @@ export default function App() {
           courseCount={selectedCourses.length}
           conflicts={conflicts}
           ready={ready}
+          openRequirementLabels={openRequirementLabels}
+          lastActivity={lastActivity}
         />
         <Finale
           planner={planner}

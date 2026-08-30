@@ -29,6 +29,7 @@ const WRITE_REACTION_MS = 500
 
 export function useMiuStatus() {
   const [status, setStatus] = useState(IDLE_STATUS)
+  const [lastActivity, setLastActivity] = useState<string | null>(null)
   const timerRef = useRef<number | null>(null)
   const eventIdRef = useRef(0)
 
@@ -54,6 +55,9 @@ export function useMiuStatus() {
 
   const onRead = useCallback(
     (humanChange: boolean, conflict?: string) => {
+      setLastActivity(
+        humanChange ? 'Read updated planner state' : 'Read current course plan',
+      )
       showThenIdle({
         pose: 'reading',
         label: 'WebMCP · get_course_plan',
@@ -68,6 +72,7 @@ export function useMiuStatus() {
 
   const onWrite = useCallback(
     (conflict?: string) => {
+      setLastActivity('Updated course plan')
       clearTimer()
       const eventId = ++eventIdRef.current
       setStatus({
@@ -94,6 +99,7 @@ export function useMiuStatus() {
 
   const onRejected = useCallback(
     (message: string) => {
+      setLastActivity('Plan update rejected')
       showThenIdle(
         {
           pose: 'conflict',
@@ -118,5 +124,5 @@ export function useMiuStatus() {
 
   useEffect(() => clearTimer, [clearTimer])
 
-  return { status, onRead, onWrite, onRejected, onCelebrate }
+  return { status, lastActivity, onRead, onWrite, onRejected, onCelebrate }
 }
