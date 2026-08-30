@@ -5,6 +5,8 @@ import idleImage from '../assets/miu/miu-idle.png'
 import idleGreetingImage from '../assets/miu/miu-idle-greeting.png'
 import idleClosedSmileImage from '../assets/miu/frame-animation/miu-idle-closed-smile.png'
 import idleHalfCloseSmileImage from '../assets/miu/frame-animation/miu-idle-half-close-smile.png'
+import idleLookLeftImage from '../assets/miu/frame-animation/miu-idle-look-left.png'
+import idleLookRightImage from '../assets/miu/frame-animation/miu-idle-look-right.png'
 import readingImage from '../assets/miu/miu-reading.png'
 import readyImage from '../assets/miu/miu-ready.png'
 import workingImage from '../assets/miu/miu-working.png'
@@ -15,8 +17,11 @@ const idleExpressionImages = [
   idleHalfCloseSmileImage,
   idleClosedSmileImage,
   idleHalfCloseSmileImage,
+  idleLookLeftImage,
+  idleLookRightImage,
 ]
-const idleCadence = [3600, 4200, 3800, 4400]
+const idleExpressionFrames = [2, 4, 2, 5]
+const idleCadence = [3600, 5200, 4200, 4800]
 const greetingDuration = 2400
 const clickDuration = 1400
 
@@ -36,6 +41,8 @@ const preloadedImages = [
   idleGreetingImage,
   idleHalfCloseSmileImage,
   idleClosedSmileImage,
+  idleLookLeftImage,
+  idleLookRightImage,
 ]
 
 type LocalMode = 'greeting' | 'idle' | 'click'
@@ -119,9 +126,10 @@ export function Miu({ status }: { status: MiuPresentation }) {
     }
     const scheduleExpression = () => {
       timer = window.setTimeout(() => {
+        const expressionFrame = idleExpressionFrames[cadenceIndex]
         updateFrame(1)
         timer = window.setTimeout(() => {
-          updateFrame(2)
+          updateFrame(expressionFrame)
           timer = window.setTimeout(() => {
             updateFrame(3)
             timer = window.setTimeout(() => {
@@ -129,7 +137,7 @@ export function Miu({ status }: { status: MiuPresentation }) {
               cadenceIndex = (cadenceIndex + 1) % idleCadence.length
               scheduleExpression()
             }, 100)
-          }, 120)
+          }, expressionFrame >= 4 ? 330 : 120)
         }, 100)
       }, idleCadence[cadenceIndex])
     }
