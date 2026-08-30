@@ -227,6 +227,7 @@ img {
 .site-nav {
   pointer-events: auto;
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 28px;
@@ -255,6 +256,21 @@ img {
 
 .site-nav-meta .dot {
   color: var(--separator);
+}
+
+.site-nav-status {
+  padding: 4px 8px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.site-nav-status[data-status='ready'] {
+  color: var(--ink);
 }
 
 .hero {
@@ -610,6 +626,14 @@ img {
   margin: 2px 0;
   overflow: hidden;
   min-width: 0;
+  animation: tt-event-in var(--duration) var(--ease) both;
+}
+
+@keyframes tt-event-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
 }
 
 .tt-event-code {
@@ -784,7 +808,8 @@ img {
   border-left: 1px solid var(--separator);
 }
 
-.status-more {
+.status-more,
+.status-activity {
   list-style: none;
   padding: 0;
   flex-basis: 100%;
@@ -1475,6 +1500,7 @@ img {
     scroll-behavior: auto !important;
   }
 
+  .tt-event,
   .miu-character,
   .miu-art,
   .miu-glint,

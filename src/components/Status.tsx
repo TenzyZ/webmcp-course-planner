@@ -4,6 +4,8 @@ type StatusProps = {
   courseCount: number
   conflicts: string[]
   ready: boolean
+  openRequirementLabels: string[]
+  lastActivity: string | null
 }
 
 export function Status({
@@ -12,9 +14,17 @@ export function Status({
   courseCount,
   conflicts,
   ready,
+  openRequirementLabels,
+  lastActivity,
 }: StatusProps) {
   const conflictLabel =
     conflicts.length === 0 ? 'No time conflicts' : conflicts[0]
+  const readyLabel =
+    ready && openRequirementLabels.length === 1
+      ? `Ready to review · ${openRequirementLabels[0]} still open`
+      : ready && openRequirementLabels.length > 1
+        ? `Ready to review · ${openRequirementLabels.length} requirements still open`
+        : 'Ready to review'
 
   return (
     <section className="section status-section" aria-labelledby="status-heading">
@@ -25,7 +35,7 @@ export function Status({
               Schedule status
             </p>
             <h2 className="status-title">
-              {ready ? 'Ready to review' : 'Needs attention'}
+              {ready ? readyLabel : 'Needs attention'}
             </h2>
           </div>
           <ul className="status-facts">
@@ -39,6 +49,11 @@ export function Status({
           </ul>
           {conflicts.length > 1 ? (
             <p className="status-more">{conflicts.slice(1).join(' · ')}</p>
+          ) : null}
+          {lastActivity ? (
+            <p className="status-activity">
+              Last agent action · {lastActivity}
+            </p>
           ) : null}
         </div>
       </div>
